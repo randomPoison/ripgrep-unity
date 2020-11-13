@@ -2,20 +2,26 @@ using System.IO;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.Networking;
+using Debug = UnityEngine.Debug;
 
 namespace Ripgrep.Editor
 {
-    internal class Installer
+    public class Installer
     {
-        private const string DownloadUrl = "https://github.com/BurntSushi/ripgrep/releases/download/12.1.1/ripgrep-12.1.1-x86_64-pc-windows-msvc.zip";
-        private const string InstallRoot = "Library/com.random-poison.ripgrep-unity";
-        private const string BinPath = "Library/com.random-poison.ripgrep-unity/ripgrep-12.1.1-x86_64-pc-windows-msvc/rg.exe";
+        internal const string DownloadUrl = "https://github.com/BurntSushi/ripgrep/releases/download/12.1.1/ripgrep-12.1.1-x86_64-pc-windows-msvc.zip";
+        internal const string InstallRoot = "Library/com.random-poison.ripgrep-unity";
+        internal const string BinPath = "Library/com.random-poison.ripgrep-unity/ripgrep-12.1.1-x86_64-pc-windows-msvc/rg.exe";
 
         [MenuItem("File/Install ripgrep")]
         public static void TryToDoAnInstall()
         {
+            // TODO: Check to see if it's already installed and skip the installation
+            // process if it is.
+            //
+            // TODO: Provide an option to force-install, which would mean deleting any
+            // existing installation before doing the install.
+
             // TODO: Determine the correct download URL for the current platform.
             var request = UnityWebRequest.Get(DownloadUrl);
             request.SendWebRequest().completed += _ =>
