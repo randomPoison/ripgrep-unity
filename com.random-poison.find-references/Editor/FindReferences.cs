@@ -1,7 +1,7 @@
+using System.Collections.Generic;
+using Ripgrep.Editor;
 using UnityEditor;
 using UnityEngine;
-using Ripgrep.Editor;
-using System.Collections.Generic;
 
 namespace FindReferences.Editor
 {
