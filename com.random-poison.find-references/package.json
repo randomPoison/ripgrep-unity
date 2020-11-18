@@ -1,0 +1,12 @@
+{
+  "name": "com.random-poison.find-references",
+  "version": "0.1.0",
+  "displayName": "Find References",
+  "description": "A tool for finding all references to a given asset within a Unity project.",
+  "unity": "2019.3",
+  "author": {
+    "name": "David LeGare",
+    "email": "dlegare.1001@gmail.com",
+    "url": "https://randompoison.github.io"
+  }
+}

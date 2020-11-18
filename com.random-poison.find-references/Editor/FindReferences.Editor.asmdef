@@ -1,0 +1,17 @@
+{
+    "name": "FindReferences.Editor",
+    "references": [
+        "GUID:2dccd18870b96e34d9757eafa5655c32"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

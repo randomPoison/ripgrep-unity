@@ -13,7 +13,14 @@ namespace Ripgrep.Editor
         internal const string InstallRoot = "Library/com.random-poison.ripgrep-unity";
         internal const string BinPath = "Library/com.random-poison.ripgrep-unity/ripgrep-12.1.1-x86_64-pc-windows-msvc/rg.exe";
 
-        [MenuItem("File/Install ripgrep")]
+        /// <summary>
+        /// Checks if the Ripgrep binary has been installed.
+        /// </summary>
+        public static bool IsInstalled => File.Exists(BinPath);
+
+        // TODO: Add a more script-friendly way to perform the install, that way other
+        // scripts can trigger the install if they need ripgrep.
+        [MenuItem("Tools/Ripgrep/Install Ripgrep")]
         public static void TryToDoAnInstall()
         {
             // TODO: Check to see if it's already installed and skip the installation

@@ -1,39 +1,38 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using UnityEditor;
 using Debug = UnityEngine.Debug;
 
 namespace Ripgrep.Editor
 {
-    public class Ripgrep
+    /// <summary>
+    /// 
+    /// </summary>
+    public class Search
     {
-        // TODO: Split this into a separate package.
-        [MenuItem("Assets/Find All References")]
-        public static void FindReferences()
+        /// <summary>
+        /// The raw arguments passed to the <c>rg</c> executable.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// Arguments are represented as they would be when using <c>rg</c>
+        /// </remarks>
+        public string Args { get; set; }
+
+        public Search()
         {
-            if (Selection.assetGUIDs.Length == 0)
+            // TODO: Provide an option to automatically install Ripgrep before running
+            // the search if it's not already installed.
+            if (!Installer.IsInstalled)
             {
-                Debug.LogWarning("Select an asset first in order to find references");
-            }
-
-            if (Selection.assetGUIDs.Length > 1)
-            {
-                Debug.LogWarning(
-                    "More than one asset selected, can only find references for one asset at a " +
-                    "time");
-            }
-
-            var guid = Selection.assetGUIDs[0];
-            var references = SearchProject(guid);
-
-            if (references != null)
-            {
-                Debug.Log($"{references.Count} references:\n" + string.Join("\n", references));
+                throw new InvalidOperationException(
+                    "Ripgrep executable is not installed, please run the installer");
             }
         }
 
-        public static List<string> SearchProject(string pattern)
+        // TODO: Make this 
+        public List<string> Run()
         {
             if (!File.Exists(Installer.BinPath))
             {
@@ -41,12 +40,11 @@ namespace Ripgrep.Editor
                 return null;
             }
 
-            var arguments = $@"--files-with-matches --no-text ""{pattern}"" Assets/";
             var processStartInfo = new ProcessStartInfo
             {
                 FileName = Path.GetFullPath(Installer.BinPath),
                 CreateNoWindow = true,
-                Arguments = arguments,
+                Arguments = Args,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
             };
@@ -60,6 +58,10 @@ namespace Ripgrep.Editor
 
                 if (string.IsNullOrWhiteSpace(path)) return;
 
+                // NOTE: Unity follows the convention that paths always use '/' as the separator
+                // character, even on Windows where '\' is the convention. To keep things
+                // consistent for Unity users, we normalize the paths returned by Ripgrep to always
+                // use '/'.
                 references.Add(path.Replace("\\", "/"));
             };
 
