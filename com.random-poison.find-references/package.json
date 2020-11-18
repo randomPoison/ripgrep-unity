@@ -8,5 +8,8 @@
     "name": "David LeGare",
     "email": "dlegare.1001@gmail.com",
     "url": "https://randompoison.github.io"
+  },
+  "dependencies": {
+    "com.random-poison.ripgrep-unity": "0.1.0"
   }
 }

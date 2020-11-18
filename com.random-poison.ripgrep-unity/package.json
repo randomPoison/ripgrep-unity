@@ -1,7 +1,7 @@
 {
   "name": "com.random-poison.ripgrep-unity",
   "version": "0.1.0",
-  "displayName": "ripgrep",
+  "displayName": "Ripgrep for Unity",
   "description": "A distribution of the ripgrep utility with C# bindings for use in Unity editor scripts.",
   "unity": "2019.3",
   "author": {
