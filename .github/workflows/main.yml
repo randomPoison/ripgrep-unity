@@ -33,6 +33,21 @@ jobs:
         env:
           UNITY_LICENSE: ${{ secrets[matrix.licenseSecret] }}
 
+      - uses: actions/upload-artifact@v1
+        with:
+          name: Test results
+          path: artifacts
+
+      # TODO: We'll have to tweak how we're recording test results once we setup
+      # multiple tests projects:
+      # https://github.com/marketplace/actions/publish-unit-test-results#use-with-matrix-strategy
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1.5
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          files: artifacts/*.xml
+
   checkFormatting:
     name: Check Code Formatting
     runs-on: ubuntu-latest
