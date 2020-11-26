@@ -48,12 +48,20 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
       #     files: artifacts/*.xml
 
-      - name: Record Test Results
+      - name: Record Edit Mode Tests
         uses: zyborg/dotnet-tests-report@v1.2.0
         with:
-          report_name: all_tests
-          report_title: All Tests
+          report_name: edit_mode
+          report_title: Edit Mode Tests
           test_results_path: artifacts/editmode-results.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Record Play Mode Tests
+        uses: zyborg/dotnet-tests-report@v1.2.0
+        with:
+          report_name: play_mode
+          report_title: Play Mode Tests
+          test_results_path: artifacts/playmode-results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   checkFormatting:
