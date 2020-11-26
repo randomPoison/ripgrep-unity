@@ -38,15 +38,23 @@ jobs:
           name: Test results
           path: artifacts
 
-      # TODO: We'll have to tweak how we're recording test results once we setup
-      # multiple tests projects:
-      # https://github.com/marketplace/actions/publish-unit-test-results#use-with-matrix-strategy
-      - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1.5
-        if: always()
+      # # TODO: We'll have to tweak how we're recording test results once we setup
+      # # multiple tests projects:
+      # # https://github.com/marketplace/actions/publish-unit-test-results#use-with-matrix-strategy
+      # - name: Publish Unit Test Results
+      #   uses: EnricoMi/publish-unit-test-result-action@v1.5
+      #   if: always()
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     files: artifacts/*.xml
+
+      - name: Record Test Results
+        uses: zyborg/dotnet-tests-report@v1.2.0
         with:
+          report_name: all_tests
+          report_title: All Tests
+          test_results_path: artifacts/editmode-results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: artifacts/*.xml
 
   checkFormatting:
     name: Check Code Formatting
