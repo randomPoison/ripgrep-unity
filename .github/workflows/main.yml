@@ -53,7 +53,7 @@ jobs:
         with:
           report_name: edit_mode
           report_title: Edit Mode Tests
-          test_results_path: artifacts/editmode-results.xml
+          test_results_path: ${{ github.workspace }}/artifacts/editmode-results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Record Play Mode Tests
@@ -61,7 +61,7 @@ jobs:
         with:
           report_name: play_mode
           report_title: Play Mode Tests
-          test_results_path: artifacts/playmode-results.xml
+          test_results_path: ${{ github.workspace }}/artifacts/playmode-results.xml
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   checkFormatting:
