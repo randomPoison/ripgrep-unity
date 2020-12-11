@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using Ripgrep.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -23,11 +24,15 @@ namespace FindReferences.Editor
             }
 
             var guid = Selection.assetGUIDs[0];
+            var name = Path.GetFileName(AssetDatabase.GUIDToAssetPath(guid));
+
+            var startTime = Time.realtimeSinceStartup;
             var references = ForGuid(guid);
 
+            var elapsedTime = Time.realtimeSinceStartup - startTime;
             if (references != null)
             {
-                Debug.Log($"{references.Count} references:\n" + string.Join("\n", references));
+                Debug.Log($"Found {references.Count} reference(s) to {name} (took {elapsedTime:0.##} secs):\n" + string.Join("\n", references));
             }
         }
 
