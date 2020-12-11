@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.IO;
-using ICSharpCode.SharpZipLib.Core;
+using System.Text;
+using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,6 +14,8 @@ namespace Ripgrep.Editor
     {
         private string _downloadUrl;
         private string _installRoot;
+        private ArchiveType _archiveType;
+        private string _archiveExtension;
 
         public bool IsDone { get; private set; } = false;
         public bool Succeeded { get; private set; } = false;
@@ -19,10 +23,27 @@ namespace Ripgrep.Editor
 
         public event Action Completed;
 
-        public InstallOperation(string downloadUrl, string installRoot)
+        public InstallOperation(string downloadUrl, string installRoot, ArchiveType archiveType)
         {
             _downloadUrl = downloadUrl;
             _installRoot = installRoot;
+            _archiveType = archiveType;
+
+            switch (_archiveType)
+            {
+                case ArchiveType.Zip:
+                    _archiveExtension = "zip";
+                    break;
+
+                case ArchiveType.Tgz:
+                    _archiveExtension = "tar.gz";
+                    break;
+
+                default:
+                    throw new ArgumentException(
+                        $"Unknown archive type {archiveType}",
+                        nameof(archiveType));
+            }
         }
 
         public void Start()
@@ -39,7 +60,7 @@ namespace Ripgrep.Editor
                         return;
                     }
 
-                    var downloadPath = Path.Combine(_installRoot, "ripgrep.zip");
+                    var downloadPath = Path.Combine(_installRoot, $"ripgrep.{_archiveExtension}");
 
                     // Create the directory for the file if it doesn't already exist.
                     Directory.CreateDirectory(Path.GetDirectoryName(downloadPath));
@@ -51,39 +72,26 @@ namespace Ripgrep.Editor
                     // be an improvement.
                     File.WriteAllBytes(downloadPath, request.downloadHandler.data);
 
-                    using (var fileInput = File.OpenRead(downloadPath))
-                    using (var zipFile = new ZipFile(fileInput))
+                    switch (_archiveType)
                     {
-                        foreach (ZipEntry zipEntry in zipFile)
-                        {
-                            // Ignore directories, since we handle recreating the directory
-                            // hierarchy based on the path described in the entry name.
-                            if (!zipEntry.IsFile)
+                        case ArchiveType.Zip:
+                            var unzipper = new FastZip();
+                            unzipper.ExtractZip(downloadPath, _installRoot, null);
+                            break;
+
+                        case ArchiveType.Tgz:
+                            using (var inStream = File.OpenRead(downloadPath))
+                            using (var gzipStream = new GZipInputStream(inStream))
+                            using (var tarArchive = TarArchive.CreateInputTarArchive(gzipStream, Encoding.UTF8))
                             {
-                                continue;
+                                tarArchive.ExtractContents(_installRoot);
                             }
+                            break;
 
-                            var entryFileName = zipEntry.Name;
-
-                            // Determine the output path for the file.
-                            var fullZipToPath = Path.Combine(_installRoot, entryFileName);
-
-                            // Create the directory for the file if it doesn't already exist.
-                            Directory.CreateDirectory(Path.GetDirectoryName(fullZipToPath));
-
-                            // 4K is optimum (according to the SharpZipLib examples).
-                            var buffer = new byte[4096];
-
-                            // Unzip file in buffered chunks. This is just as fast as unpacking
-                            // to a buffer the full size of the file, but does not waste memory.
-                            // The "using" will close the stream even if an exception occurs.
-                            using (var zipStream = zipFile.GetInputStream(zipEntry))
-                            using (Stream fsOutput = File.Create(fullZipToPath))
-                            {
-                                StreamUtils.Copy(zipStream, fsOutput, buffer);
-                            }
-                        }
+                        default:
+                            throw new NotSupportedException($"Unknown archive type {_archiveType}");
                     }
+
 
                     Succeeded = true;
                 }

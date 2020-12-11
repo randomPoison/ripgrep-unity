@@ -8,11 +8,11 @@ public class InstallationTests
 {
     private const string TestDir = "Library/com.random-poison.ripgrep-unity/Test";
 
-    public static (string, string)[] InstallParams => new (string, string)[]
+    public static (string, string, ArchiveType)[] InstallParams => new (string, string, ArchiveType)[]
     {
-        (Installer.WindowsDownloadUrl, Installer.WindowsBinPath),
-        (Installer.MacosDownloadUrl, Installer.MacosBinPath),
-        (Installer.LinuxDownloadUrl, Installer.LinuxBinPath),
+        (Installer.WindowsDownloadUrl, Installer.WindowsBinPath, ArchiveType.Zip),
+        (Installer.MacosDownloadUrl, Installer.MacosBinPath, ArchiveType.Tgz),
+        (Installer.LinuxDownloadUrl, Installer.LinuxBinPath, ArchiveType.Tgz),
     };
 
     [TearDown]
@@ -27,11 +27,11 @@ public class InstallationTests
     [UnityTest]
     public IEnumerator InstallForPlatform(
         [ValueSource(nameof(InstallParams))]
-        (string url, string binPath) installParams)
+        (string url, string binPath, ArchiveType archiveType) installParams)
     {
         var expectedBinPath = Path.Combine(TestDir, installParams.binPath);
 
-        var installOp = new InstallOperation(installParams.url, TestDir);
+        var installOp = new InstallOperation(installParams.url, TestDir, installParams.archiveType);
         Assert.IsFalse(installOp.IsDone, $"{nameof(InstallOperation.IsDone)} should be false when operation is first created");
 
         installOp.Start();

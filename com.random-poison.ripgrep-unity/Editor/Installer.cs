@@ -71,7 +71,7 @@ namespace Ripgrep.Editor
             // existing installation before doing the install.
             //
             // TODO: Determine the correct download URL for the current platform.
-            var installOp = new InstallOperation(WindowsDownloadUrl, InstallRoot);
+            var installOp = new InstallOperation(WindowsDownloadUrl, InstallRoot, ArchiveType.Zip);
             installOp.Start();
             return installOp;
         }
