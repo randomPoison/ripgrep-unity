@@ -38,6 +38,12 @@ jobs:
           name: Test results
           path: artifacts
 
+      - uses: MirrorNG/nunit-reporter@v1.0.9
+        if: always()
+        with:
+          path: artifacts/*.xml
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
   checkFormatting:
     name: Check Code Formatting
     runs-on: ubuntu-latest

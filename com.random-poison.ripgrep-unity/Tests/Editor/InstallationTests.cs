@@ -37,4 +37,10 @@ public class InstallationTests
         Assert.IsTrue(installOp.Succeeded, "Install operation failed");
         Assert.IsTrue(File.Exists(expectedBinPath), $"No executable found at expected bin path: {expectedBinPath}");
     }
+
+    [Test]
+    public void FailingTest()
+    {
+        Assert.IsTrue(false, "Verifying that test failures are reported");
+    }
 }
