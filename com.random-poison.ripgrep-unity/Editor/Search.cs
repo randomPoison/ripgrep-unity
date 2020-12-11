@@ -34,7 +34,7 @@ namespace Ripgrep.Editor
         // TODO: Make this 
         public List<string> Run()
         {
-            if (!File.Exists(Installer.BinPath))
+            if (!File.Exists(Installer.WindowsBinPath))
             {
                 Debug.LogWarning($"ripgrep not installed, please run installer before doing an asset search");
                 return null;
@@ -42,7 +42,7 @@ namespace Ripgrep.Editor
 
             var processStartInfo = new ProcessStartInfo
             {
-                FileName = Path.GetFullPath(Installer.BinPath),
+                FileName = Path.GetFullPath(Installer.WindowsBinPath),
                 CreateNoWindow = true,
                 Arguments = Args,
                 UseShellExecute = false,
