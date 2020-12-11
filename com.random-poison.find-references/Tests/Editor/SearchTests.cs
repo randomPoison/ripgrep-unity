@@ -1,8 +1,7 @@
 using System.Collections;
+using NUnit.Framework;
 using Ripgrep.Editor;
 using UnityEngine.TestTools;
-using FindReferences.Editor;
-using NUnit.Framework;
 
 public class SearchTests
 {
