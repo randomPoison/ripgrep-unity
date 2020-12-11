@@ -39,6 +39,7 @@ jobs:
       - run: |
           tar -xvzf test-project-2019.3/Library/com.random-poison.ripgrep-unity/ripgrep.tar.gz -C tmp_dir
           ls -al tmp_dir
+        if: always()
 
       - uses: actions/upload-artifact@v1
         if: always()
