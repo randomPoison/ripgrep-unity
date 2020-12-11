@@ -33,7 +33,7 @@ jobs:
         env:
           UNITY_LICENSE: ${{ secrets[matrix.licenseSecret] }}
 
-      - run: ls -al Library/com.random-poison.ripgrep-unity/ripgrep-12.1.1-x86_64-unknown-linux-musl
+      - run: ls -al test-project-2019.3/Library/com.random-poison.ripgrep-unity/ripgrep-12.1.1-x86_64-unknown-linux-musl
         if: always()
 
       - uses: actions/upload-artifact@v1
