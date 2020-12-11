@@ -8,7 +8,7 @@ public class InstallationTests
 {
     private const string TestDir = "Library/com.random-poison.ripgrep-unity/Test";
 
-    public static (string, string, ArchiveType)[] InstallParams => new (string, string, ArchiveType)[]
+    public static (string, string, ArchiveType)[] PlatformInstallations => new (string, string, ArchiveType)[]
     {
         (Installer.WindowsDownloadUrl, Installer.WindowsBinPath, ArchiveType.Zip),
         (Installer.MacosDownloadUrl, Installer.MacosBinPath, ArchiveType.Tgz),
@@ -26,7 +26,7 @@ public class InstallationTests
 
     [UnityTest]
     public IEnumerator InstallForPlatform(
-        [ValueSource(nameof(InstallParams))]
+        [ValueSource(nameof(PlatformInstallations))]
         (string url, string binPath, ArchiveType archiveType) installParams)
     {
         var expectedBinPath = Path.Combine(TestDir, installParams.binPath);
@@ -43,9 +43,23 @@ public class InstallationTests
         Assert.IsTrue(File.Exists(expectedBinPath), $"No executable found at expected bin path: {expectedBinPath}");
     }
 
-    public struct InstallTestParams
+    [UnityTest]
+    public IEnumerator InstallForCurrentPlatform()
     {
-        public string DownloadUrl;
-        public string BinPath;
+        // If there's already an existing install, clear it out so that we can be sure
+        // we're actually testing the installation process.
+        if (Installer.IsInstalled)
+        {
+            Directory.Delete(Installer.InstallRoot, true);
+        }
+
+        Assert.IsFalse(Installer.IsInstalled, "Ripgrep is still installed after deleting root directory");
+
+        var installOp = Installer.Install();
+        yield return installOp;
+
+        Assert.IsTrue(installOp.IsDone, $"{nameof(InstallOperation.IsDone)} should be true when operation finishes");
+        Assert.IsTrue(installOp.Succeeded, $"Install operation failed: {installOp?.OperationException}");
+        Assert.IsTrue(Installer.IsInstalled, "Ripgrep is not installed after install operation finished");
     }
 }

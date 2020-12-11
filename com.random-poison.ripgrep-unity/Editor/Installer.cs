@@ -71,7 +71,27 @@ namespace Ripgrep.Editor
             // existing installation before doing the install.
             //
             // TODO: Determine the correct download URL for the current platform.
-            var installOp = new InstallOperation(WindowsDownloadUrl, InstallRoot, ArchiveType.Zip);
+            InstallOperation installOp;
+
+            switch (Application.platform)
+            {
+                case RuntimePlatform.WindowsEditor:
+                    installOp = new InstallOperation(WindowsDownloadUrl, InstallRoot, ArchiveType.Zip);
+                    break;
+
+                case RuntimePlatform.OSXEditor:
+                    installOp = new InstallOperation(MacosDownloadUrl, InstallRoot, ArchiveType.Tgz);
+                    break;
+
+                case RuntimePlatform.LinuxEditor:
+                    installOp = new InstallOperation(LinuxDownloadUrl, InstallRoot, ArchiveType.Tgz);
+                    break;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Invalid install platform {Application.platform}");
+            }
+
             installOp.Start();
             return installOp;
         }
