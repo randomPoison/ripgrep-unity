@@ -16,23 +16,18 @@ namespace FindReferences.Editor
                 Debug.LogWarning("Select an asset first in order to find references");
             }
 
-            if (Selection.assetGUIDs.Length > 1)
+            foreach (var guid in Selection.assetGUIDs)
             {
-                Debug.LogWarning(
-                    "More than one asset selected, can only find references for one asset at a " +
-                    "time");
-            }
+                var name = Path.GetFileName(AssetDatabase.GUIDToAssetPath(guid));
 
-            var guid = Selection.assetGUIDs[0];
-            var name = Path.GetFileName(AssetDatabase.GUIDToAssetPath(guid));
+                var startTime = Time.realtimeSinceStartup;
+                var references = ForGuid(guid);
 
-            var startTime = Time.realtimeSinceStartup;
-            var references = ForGuid(guid);
-
-            var elapsedTime = Time.realtimeSinceStartup - startTime;
-            if (references != null)
-            {
-                Debug.Log($"Found {references.Count} reference(s) to {name} (took {elapsedTime:0.##} secs):\n" + string.Join("\n", references));
+                var elapsedTime = Time.realtimeSinceStartup - startTime;
+                if (references != null)
+                {
+                    Debug.Log($"Found {references.Count} reference(s) to {name} (took {elapsedTime:0.##} secs):\n" + string.Join("\n", references));
+                }
             }
         }
 
