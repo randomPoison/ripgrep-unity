@@ -35,10 +35,9 @@ namespace FindReferences.Editor
         [MenuItem("Assets/Find References")]
         public static void PopQuickSearch()
         {
-            var search = QuickSearch.OpenWithContextualProvider("references");
-
             if (Selection.assetGUIDs.Length > 0)
             {
+                var search = QuickSearch.OpenWithContextualProvider("references");
                 search.SetSearchText(AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]));
             }
         }
@@ -51,6 +50,11 @@ namespace FindReferences.Editor
                 filterId = "ref:",
                 isExplicitProvider = true,
                 fetchItems = (context, items, provider) => FetchItems(context, provider),
+                toObject = (item, type) => AssetDatabase.LoadAssetAtPath(item.id, type),
+                openContextual = (selection, rect) => OpenContextualMenu(selection, rect),
+
+                showDetails = true,
+                showDetailsOptions = ShowDetailsOptions.Default | ShowDetailsOptions.Inspector,
             };
         }
 
@@ -68,13 +72,9 @@ namespace FindReferences.Editor
                 yield return null;
             }
 
-            foreach (var asset in search.Result)
+            foreach (var assetPath in search.Result)
             {
-                yield return new SearchItem(asset)
-                {
-                    label = asset,
-                    provider = provider,
-                };
+                yield return provider.CreateItem(context, assetPath, assetPath, null, null, null);
             }
         }
 
@@ -84,6 +84,15 @@ namespace FindReferences.Editor
             search.Args = $@"--files-with-matches --no-text --glob !**/*.meta ""{guid}"" Assets/";
             search.Run();
             return search;
+        }
+
+        private static bool OpenContextualMenu(SearchSelection selection, Rect contextRect)
+        {
+            var old = Selection.instanceIDs;
+            SearchUtils.SelectMultipleItems(selection);
+            EditorUtility.DisplayPopupMenu(contextRect, "Assets/", null);
+            EditorApplication.delayCall += () => EditorApplication.delayCall += () => Selection.instanceIDs = old;
+            return true;
         }
     }
 }
