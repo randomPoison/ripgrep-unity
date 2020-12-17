@@ -49,6 +49,7 @@ namespace FindReferences.Editor
             return new SearchProvider("references", "Find References")
             {
                 filterId = "ref:",
+                isExplicitProvider = true,
                 fetchItems = (context, items, provider) => FetchItems(context, provider),
             };
         }
@@ -72,6 +73,7 @@ namespace FindReferences.Editor
                 yield return new SearchItem(asset)
                 {
                     label = asset,
+                    provider = provider,
                 };
             }
         }

@@ -25,7 +25,7 @@ namespace Ripgrep.Editor
         public event Action<string> MatchFound;
         public event Action<List<string>> Completed;
 
-        public bool IsDone => _searchProcess?.HasExited ?? false;
+        public bool IsDone { get; private set; } = false;
         public List<string> Result => IsDone ? _matches : null;
 
         private Process _searchProcess;
@@ -48,9 +48,7 @@ namespace Ripgrep.Editor
             {
                 Debug.LogWarning($"ripgrep not installed, please run installer before doing an asset search");
 
-                // TODO: `IsDone` won't return a correct result in this case, since `_searchProcess`
-                // will be null. Determine how to handle this case correctly. We likely need a way
-                // to return error information.
+                IsDone = true;
                 return;
             }
 
@@ -91,19 +89,16 @@ namespace Ripgrep.Editor
             _searchProcess.Exited += (sender, args) =>
             {
                 // TODO: Check the process to see if it exited successfully.
-                InvokeOnMainThread(() => { Completed?.Invoke(_matches); });
+                InvokeOnMainThread(() =>
+                {
+                    IsDone = true;
+                    Completed?.Invoke(_matches);
+                });
             };
 
             // Run ripgrep.
             _searchProcess.Start();
             _searchProcess.BeginOutputReadLine();
-        }
-
-        public List<string> RunAndWaitForResults()
-        {
-            Run();
-            while (!IsDone) { }
-            return _matches;
         }
 
         /// <summary>
