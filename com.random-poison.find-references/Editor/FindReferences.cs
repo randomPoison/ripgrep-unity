@@ -23,13 +23,11 @@ namespace FindReferences.Editor
                 var name = Path.GetFileName(AssetDatabase.GUIDToAssetPath(guid));
 
                 var startTime = Time.realtimeSinceStartup;
-                var references = ForGuid(guid);
-
-                var elapsedTime = Time.realtimeSinceStartup - startTime;
-                if (references != null)
+                ForGuid(guid).Completed += references =>
                 {
+                    var elapsedTime = Time.realtimeSinceStartup - startTime;
                     Debug.Log($"Found {references.Count} reference(s) to {name} (took {elapsedTime:0.##} secs):\n" + string.Join("\n", references));
-                }
+                };
             }
         }
 
@@ -37,7 +35,12 @@ namespace FindReferences.Editor
         [MenuItem("Assets/Find References")]
         public static void PopQuickSearch()
         {
-            QuickSearch.OpenWithContextualProvider("references");
+            var search = QuickSearch.OpenWithContextualProvider("references");
+
+            if (Selection.assetGUIDs.Length > 0)
+            {
+                search.SetSearchText(AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]));
+            }
         }
 
         [SearchItemProvider]
@@ -46,18 +49,39 @@ namespace FindReferences.Editor
             return new SearchProvider("references", "Find References")
             {
                 filterId = "ref:",
-                fetchItems = (context, items, provider) =>
-                {
-                    return null;
-                },
+                fetchItems = (context, items, provider) => FetchItems(context, provider),
             };
         }
 
-        public static List<string> ForGuid(string guid)
+        private static IEnumerable<SearchItem> FetchItems(SearchContext context, SearchProvider provider)
+        {
+            var guid = AssetDatabase.AssetPathToGUID(context.searchText);
+            if (guid == null)
+            {
+                yield break;
+            }
+
+            var search = ForGuid(guid);
+            while (!search.IsDone)
+            {
+                yield return null;
+            }
+
+            foreach (var asset in search.Result)
+            {
+                yield return new SearchItem(asset)
+                {
+                    label = asset,
+                };
+            }
+        }
+
+        public static Search ForGuid(string guid)
         {
             var search = new Search();
             search.Args = $@"--files-with-matches --no-text --glob !**/*.meta ""{guid}"" Assets/";
-            return search.Run();
+            search.Run();
+            return search;
         }
     }
 }
