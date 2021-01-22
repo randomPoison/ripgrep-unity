@@ -38,7 +38,7 @@ namespace FindReferences.Editor
             if (Selection.assetGUIDs.Length > 0)
             {
                 var search = QuickSearch.OpenWithContextualProvider("references");
-                search.SetSearchText(AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]));
+                search.SetSearchText("ref:" + AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]));
             }
         }
 
@@ -60,7 +60,7 @@ namespace FindReferences.Editor
 
         private static IEnumerable<SearchItem> FetchItems(SearchContext context, SearchProvider provider)
         {
-            var guid = AssetDatabase.AssetPathToGUID(context.searchText);
+            var guid = AssetDatabase.AssetPathToGUID(context.searchQuery);
             if (guid == null)
             {
                 yield break;
