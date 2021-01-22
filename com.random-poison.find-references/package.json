@@ -10,6 +10,7 @@
     "url": "https://randompoison.github.io"
   },
   "dependencies": {
-    "com.random-poison.ripgrep-unity": "0.1.0"
+    "com.random-poison.ripgrep-unity": "0.1.0",
+    "com.unity.quicksearch": "2.0.0"
   }
 }
