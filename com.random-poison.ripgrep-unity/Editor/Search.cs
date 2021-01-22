@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor;
 using Debug = UnityEngine.Debug;
 
 namespace Ripgrep.Editor
@@ -9,7 +11,7 @@ namespace Ripgrep.Editor
     /// <summary>
     /// 
     /// </summary>
-    public class Search
+    public class Search : IEnumerator
     {
         /// <summary>
         /// The raw arguments passed to the <c>rg</c> executable.
@@ -19,6 +21,15 @@ namespace Ripgrep.Editor
         /// Arguments are represented as they would be when using <c>rg</c>
         /// </remarks>
         public string Args { get; set; }
+
+        public event Action<string> MatchFound;
+        public event Action<List<string>> Completed;
+
+        public bool IsDone { get; private set; } = false;
+        public List<string> Result => IsDone ? _matches : null;
+
+        private Process _searchProcess;
+        private List<string> _matches = new List<string>();
 
         public Search()
         {
@@ -31,13 +42,14 @@ namespace Ripgrep.Editor
             }
         }
 
-        // TODO: Make this 
-        public List<string> Run()
+        public void Run()
         {
             if (!Installer.IsInstalled)
             {
                 Debug.LogWarning($"ripgrep not installed, please run installer before doing an asset search");
-                return null;
+
+                IsDone = true;
+                return;
             }
 
             var processStartInfo = new ProcessStartInfo
@@ -49,10 +61,13 @@ namespace Ripgrep.Editor
                 RedirectStandardOutput = true,
             };
 
-            var references = new List<string>();
-            var process = new Process { StartInfo = processStartInfo };
+            _searchProcess = new Process
+            {
+                StartInfo = processStartInfo,
+                EnableRaisingEvents = true,
+            };
 
-            process.OutputDataReceived += (sender, args) =>
+            _searchProcess.OutputDataReceived += (sender, args) =>
             {
                 var path = args.Data;
 
@@ -62,22 +77,63 @@ namespace Ripgrep.Editor
                 // character, even on Windows where '\' is the convention. To keep things
                 // consistent for Unity users, we normalize the paths returned by Ripgrep to always
                 // use '/'.
-                references.Add(path.Replace("\\", "/"));
+                path = path.Replace("\\", "/");
+
+                InvokeOnMainThread(() =>
+                {
+                    _matches.Add(path);
+                    MatchFound?.Invoke(path);
+                });
+            };
+
+            _searchProcess.Exited += (sender, args) =>
+            {
+                // TODO: Check the process to see if it exited successfully.
+                InvokeOnMainThread(() =>
+                {
+                    IsDone = true;
+                    Completed?.Invoke(_matches);
+                });
             };
 
             // Run ripgrep.
-            process.Start();
-            process.BeginOutputReadLine();
-
-            // Wait for ripgrep to finish.
-            //
-            // TODO: Offer an async version that doesn't block.
-            while (!process.HasExited)
-            {
-            }
-
-            return references;
+            _searchProcess.Start();
+            _searchProcess.BeginOutputReadLine();
         }
+
+        /// <summary>
+        /// Helper function that defers some action until the next editor update.
+        /// </summary>
+        ///
+        /// <param name="action">The action to invoke on the main editor thread.</param>
+        private static void InvokeOnMainThread(Action action)
+        {
+            EditorApplication.update += InvokeOnce;
+
+            void InvokeOnce()
+            {
+                try
+                {
+                    action?.Invoke();
+                }
+                finally
+                {
+                    EditorApplication.update -= InvokeOnce;
+                }
+            }
+        }
+
+        #region IEnumerator
+
+        object IEnumerator.Current => null;
+
+        bool IEnumerator.MoveNext()
+        {
+            return !IsDone;
+        }
+
+        void IEnumerator.Reset() { }
+
+        #endregion
     }
 }
-
