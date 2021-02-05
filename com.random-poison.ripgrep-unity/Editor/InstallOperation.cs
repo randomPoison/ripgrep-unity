@@ -5,6 +5,7 @@ using System.Text;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
 using ICSharpCode.SharpZipLib.Zip;
+using Mono.Unix;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -82,16 +83,42 @@ namespace Ripgrep.Editor
                         case ArchiveType.Tgz:
                             using (var inStream = File.OpenRead(downloadPath))
                             using (var gzipStream = new GZipInputStream(inStream))
-                            using (var tarArchive = TarArchive.CreateInputTarArchive(gzipStream, Encoding.UTF8))
+                            using (var tarStream = new TarInputStream(gzipStream, Encoding.UTF8))
                             {
-                                tarArchive.ExtractContents(_installRoot);
+                                for (var tarEntry = tarStream.GetNextEntry(); tarEntry != null; tarEntry = tarStream.GetNextEntry())
+                                {
+                                    // Skip directories, since any intermediate directories will
+                                    // be created automatically as the individual files are
+                                    // unpacked.
+                                    if (tarEntry.IsDirectory)
+                                    {
+                                        continue;
+                                    }
+
+                                    var rawMode = tarEntry.TarHeader.Mode;
+                                    var outPath = Path.Combine(_installRoot, tarEntry.Name);
+
+                                    var directoryPath = Path.GetDirectoryName(outPath);
+                                    Directory.CreateDirectory(directoryPath);
+
+                                    using (var outStream = new FileStream(outPath, FileMode.Create))
+                                    {
+                                        tarStream.CopyEntryContents(outStream);
+                                    }
+
+                                    // For non-Windows platforms (i.e. macOS and Linux) we need update the file access permissions
+                                    if (Application.platform != RuntimePlatform.WindowsEditor)
+                                    {
+                                        var fileInfo = new UnixFileInfo(outPath);
+                                        fileInfo.FileAccessPermissions = (FileAccessPermissions)rawMode;
+                                    }
+                                }
                             }
                             break;
 
                         default:
                             throw new NotSupportedException($"Unknown archive type {_archiveType}");
                     }
-
 
                     Succeeded = true;
                 }
