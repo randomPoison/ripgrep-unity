@@ -26,10 +26,10 @@ namespace Ripgrep.Editor
         public event Action<List<string>> Completed;
 
         public bool IsDone { get; private set; } = false;
-        public List<string> Result => IsDone ? _matches : null;
+        public List<string> Result { get; private set; } = null;
 
         private Process _searchProcess;
-        private List<string> _matches = new List<string>();
+        private HashSet<string> _matches = new HashSet<string>();
 
         public Search()
         {
@@ -44,7 +44,7 @@ namespace Ripgrep.Editor
 
         public void Run()
         {
-            if (!File.Exists(Installer.WindowsBinPath))
+            if (!Installer.IsInstalled)
             {
                 Debug.LogWarning($"ripgrep not installed, please run installer before doing an asset search");
 
@@ -54,7 +54,7 @@ namespace Ripgrep.Editor
 
             var processStartInfo = new ProcessStartInfo
             {
-                FileName = Path.GetFullPath(Installer.WindowsBinPath),
+                FileName = Path.GetFullPath(Installer.BinPath),
                 CreateNoWindow = true,
                 Arguments = Args,
                 UseShellExecute = false,
@@ -91,8 +91,13 @@ namespace Ripgrep.Editor
                 // TODO: Check the process to see if it exited successfully.
                 InvokeOnMainThread(() =>
                 {
+                    // Sort the list of results so that we can produce deterministic output.
+                    Result = new List<string>(_matches);
+                    Result.Sort();
+
+                    // Broadcast the result of the search.
                     IsDone = true;
-                    Completed?.Invoke(_matches);
+                    Completed?.Invoke(Result);
                 });
             };
 

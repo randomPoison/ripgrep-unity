@@ -1,10 +1,8 @@
 # Auto detect text files and perform LF normalization
 * text=auto
-
 *.cs diff=csharp text
 *.cginc text
 *.shader text
-
 # Unity-generated text assets always use Unix-style line endings.
 *.mat eol=lf
 *.anim eol=lf
@@ -15,3 +13,6 @@
 *.asset eol=lf
 *.meta eol=lf
 *.controller eol=lf
+*.so filter=lfs diff=lfs merge=lfs -text
+*.dll filter=lfs diff=lfs merge=lfs -text
+*.dylib filter=lfs diff=lfs merge=lfs -text

@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace Ripgrep.Editor
 {
@@ -9,12 +11,47 @@ namespace Ripgrep.Editor
         public const string RipgrepVersion = "12.1.1";
 
         public static readonly string WindowsDownloadUrl = $"https://github.com/BurntSushi/ripgrep/releases/download/{RipgrepVersion}/ripgrep-{RipgrepVersion}-x86_64-pc-windows-msvc.zip";
-        public static readonly string WindowsBinPath = $"Library/com.random-poison.ripgrep-unity/ripgrep-{RipgrepVersion}-x86_64-pc-windows-msvc/rg.exe";
+        public static readonly string MacosDownloadUrl = $"https://github.com/BurntSushi/ripgrep/releases/download/{RipgrepVersion}/ripgrep-{RipgrepVersion}-x86_64-apple-darwin.tar.gz";
+        public static readonly string LinuxDownloadUrl = $"https://github.com/BurntSushi/ripgrep/releases/download/{RipgrepVersion}/ripgrep-{RipgrepVersion}-x86_64-unknown-linux-musl.tar.gz";
+
+        public static readonly string WindowsBinPath = $"ripgrep-{RipgrepVersion}-x86_64-pc-windows-msvc/rg.exe";
+        public static readonly string MacosBinPath = $"ripgrep-{RipgrepVersion}-x86_64-apple-darwin/rg";
+        public static readonly string LinuxBinPath = $"ripgrep-{RipgrepVersion}-x86_64-unknown-linux-musl/rg";
+
+        /// <summary>
+        /// Path to the installed Ripgrep binary.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// The path is platform-specific, and will point to the correct path for the current
+        /// editor platform.
+        /// </remarks>
+        public static string BinPath
+        {
+            get
+            {
+                switch (Application.platform)
+                {
+                    case RuntimePlatform.WindowsEditor:
+                        return Path.Combine(InstallRoot, WindowsBinPath);
+
+                    case RuntimePlatform.OSXEditor:
+                        return Path.Combine(InstallRoot, MacosBinPath);
+
+                    case RuntimePlatform.LinuxEditor:
+                        return Path.Combine(InstallRoot, LinuxBinPath);
+
+                    default:
+                        throw new InvalidOperationException(
+                            $"Invalid install platform {Application.platform}");
+                }
+            }
+        }
 
         /// <summary>
         /// Checks if the Ripgrep binary has been installed.
         /// </summary>
-        public static bool IsInstalled => File.Exists(WindowsBinPath);
+        public static bool IsInstalled => File.Exists(BinPath);
 
         // TODO: Add a more script-friendly way to perform the install, that way other
         // scripts can trigger the install if they need ripgrep.
@@ -34,7 +71,27 @@ namespace Ripgrep.Editor
             // existing installation before doing the install.
             //
             // TODO: Determine the correct download URL for the current platform.
-            var installOp = new InstallOperation(WindowsDownloadUrl, InstallRoot);
+            InstallOperation installOp;
+
+            switch (Application.platform)
+            {
+                case RuntimePlatform.WindowsEditor:
+                    installOp = new InstallOperation(WindowsDownloadUrl, InstallRoot, ArchiveType.Zip);
+                    break;
+
+                case RuntimePlatform.OSXEditor:
+                    installOp = new InstallOperation(MacosDownloadUrl, InstallRoot, ArchiveType.Tgz);
+                    break;
+
+                case RuntimePlatform.LinuxEditor:
+                    installOp = new InstallOperation(LinuxDownloadUrl, InstallRoot, ArchiveType.Tgz);
+                    break;
+
+                default:
+                    throw new InvalidOperationException(
+                        $"Invalid install platform {Application.platform}");
+            }
+
             installOp.Start();
             return installOp;
         }
